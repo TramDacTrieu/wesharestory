@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Chat Example</title>
+    <script type="text/javascript">
+        window.onload = function () {
+            var conn;
+            var msg = document.getElementById("msg");
+            var log = document.getElementById("log");
+            const params = window.location.href.split("/");
+            var titlePage = document.getElementById("titlePage");
+
+            var roomId = "";
+            roomId = params[params.length - 1];
+            if (roomId == ""){
+                roomId = "1"
+            } else {
+                titlePage.innerText = "Welcom to Rom Chat " + roomId;
+            }
+
+            function appendLog(item) {
+                var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
+                let time = new Date().toLocaleTimeString();
+                let str = `<div class="row">
+                            <div class="col-10">
+                            <p>${item}</p>
+                            </div>
+                            <div class="col-2"><span class="time-left">${time}</span></div>
+                        </div>`
+                log.insertAdjacentHTML( 'beforeend', str );
+                if (doScroll) {
+                    log.scrollTop = log.scrollHeight - log.clientHeight;
+                }
+            }
+
+            document.getElementById("form").onsubmit = function () {
+                if (!conn) {
+                    return false;
+                }
+                if (!msg.value) {
+                    return false;
+                }
+                conn.send(msg.value);
+                msg.value = "";
+                return false;
+            };
+
+            if (window["WebSocket"]) {
+                var userId = "trieu";
+                conn = new WebSocket("wss://" + document.location.host + "/ws/" + roomId + "/" + userId);
+
+                conn.onmessage = function (evt) {
+                    //alert(conn.url)
+                    let messages = evt.data.split('\n');
+                    for (let i = 0; i < messages.length; i++) {
+                        appendLog(messages[i]);
+                    }
+                };
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+                appendLog(item);
+            }
+        };
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <br>
+    <div class="lert alert-primary"><p  id="titlePage" class="font-weight-bold text-center" style="font-size: xx-large">Welcome to chatroom Global</p></div>
+    <div id="log" class="border" style="height: 500px"></div>
+    <br/>
+    <form id="form">
+        <div class="row">
+            <div class="col-11">
+                <input type="text" id="msg" class="form-control" id="exampleInputPassword1" placeholder="Enter your message here">
+            </div>
+            <div class="col-1">
+                <button type="submit" class="btn btn-primary">Send</button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+
+</body>
+</html>
